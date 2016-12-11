@@ -56,6 +56,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/k2wanko/horo/log"
 	"golang.org/x/net/context"
 )
 
@@ -63,6 +64,7 @@ type (
 	// Horo freamwork instance.
 	Horo struct {
 		ErrorHandler ErrorHandlerFunc
+		Logger       log.Logger
 
 		router     *httprouter.Router
 		middleware []MiddlewareFunc
@@ -96,6 +98,7 @@ var (
 func New() (h *Horo) {
 	h = &Horo{
 		ErrorHandler: DefaultErrorHandler,
+		Logger:       log.DefaultLogger,
 		router:       httprouter.New(),
 	}
 	return
@@ -152,6 +155,8 @@ func (hf HandlerFunc) hrHandle(h *Horo, mw ...MiddlewareFunc) httprouter.Handle 
 		}
 
 		c, cancel := context.WithCancel(c)
+
+		c = log.WithContext(c, h.Logger)
 
 		hf := func(c context.Context) error {
 			mw := append(h.middleware, mw...)
