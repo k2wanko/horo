@@ -39,7 +39,7 @@ func (c *horoCtx) Value(key interface{}) interface{} {
 }
 
 func (c *horoCtx) Reset(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c.w.(*response).Reset(rw)
+	c.w.Reset(rw)
 	c.r = r
 	c.ps = ps
 }
