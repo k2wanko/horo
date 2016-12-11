@@ -111,40 +111,40 @@ func (h *Horo) Use(mw ...MiddlewareFunc) {
 
 // GET registers a new GET handler
 func (h *Horo) GET(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.GET(path, hf.hrHandle(h, mw...))
+	h.router.GET(path, h.handle(hf, mw...))
 }
 
 // POST registers a new POST handler
 func (h *Horo) POST(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.POST(path, hf.hrHandle(h, mw...))
+	h.router.POST(path, h.handle(hf, mw...))
 }
 
 // PATCH registers a new PATCH handler
 func (h *Horo) PATCH(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.PATCH(path, hf.hrHandle(h, mw...))
+	h.router.PATCH(path, h.handle(hf, mw...))
 }
 
 // PUT registers a new PUT handler
 func (h *Horo) PUT(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.PUT(path, hf.hrHandle(h, mw...))
+	h.router.PUT(path, h.handle(hf, mw...))
 }
 
 // OPTIONS registers a new OPTIONS handler
 func (h *Horo) OPTIONS(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.OPTIONS(path, hf.hrHandle(h, mw...))
+	h.router.OPTIONS(path, h.handle(hf, mw...))
 }
 
 // DELETE registers a new DELETE handler
 func (h *Horo) DELETE(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.DELETE(path, hf.hrHandle(h, mw...))
+	h.router.DELETE(path, h.handle(hf, mw...))
 }
 
 // HEAD registers a new HEAD handler
 func (h *Horo) HEAD(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
-	h.router.HEAD(path, hf.hrHandle(h, mw...))
+	h.router.HEAD(path, h.handle(hf, mw...))
 }
 
-func (hf HandlerFunc) hrHandle(h *Horo, mw ...MiddlewareFunc) httprouter.Handle {
+func (h *Horo) handle(hf HandlerFunc, mw ...MiddlewareFunc) httprouter.Handle {
 	return func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		w := &response{ResponseWriter: rw}
 		var c context.Context = &horoCtx{
