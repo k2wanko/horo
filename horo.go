@@ -1,53 +1,5 @@
 /*
 Package horo is context friendly, Simple Web framework.
-
-Standard Example:
-
-    package main
-
-    import (
-        "net/http"
-
-        "golang.org/x/net/context"
-
-        "github.com/k2wanko/horo"
-    )
-
-    func Index(c context.Context) error {
-        return horo.Text(c, http.StatusOK, "Hello World!")
-    }
-
-    func main() {
-        h := horo.New()
-
-        h.GET("/", Index)
-
-        h.ListenAndServe(":8080")
-    }
-
-Google App Engine Example:
-
-    package main
-
-    import (
-        "net/http"
-
-        "golang.org/x/net/context"
-
-        "github.com/k2wanko/horo"
-    )
-
-    func Index(c context.Context) error {
-        return horo.Text(c, http.StatusOK, "Hello World!")
-    }
-
-    func init() {
-        h := horo.New()
-
-        h.GET("/", Index)
-
-        http.Handle("/", h)
-    }
 */
 package horo
 
