@@ -2,6 +2,7 @@ package horo
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -157,12 +158,25 @@ func benchRequest(b *testing.B, router http.Handler, r *http.Request) {
 	}
 }
 
-func BenchmarkRequest(b *testing.B) {
+var testHandler http.Handler
+
+func init() {
 	h := New()
 	h.GET("/", func(c context.Context) error {
 		return Text(c, 200, "Hello, World")
 	})
+	h.GET("/:name", func(c context.Context) error {
+		return Text(c, 200, fmt.Sprintf("Hello, %s", Param(c, "name")))
+	})
+	testHandler = h
+}
 
+func BenchmarkRequest(b *testing.B) {
 	req, _ := http.NewRequest("GET", "/", nil)
-	benchRequest(b, h, req)
+	benchRequest(b, testHandler, req)
+}
+
+func BenchmarkRequestParam(b *testing.B) {
+	req, _ := http.NewRequest("GET", "/gopher", nil)
+	benchRequest(b, testHandler, req)
 }
