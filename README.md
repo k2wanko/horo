@@ -17,7 +17,7 @@ import (
 
     "golang.org/x/net/context"
 
-    "github/k2wanko/horo"
+    "github.com/k2wanko/horo"
 )
 
 func Index(c context.Context) error {
