@@ -2,6 +2,7 @@ package horo
 
 import (
 	"bufio"
+	"context"
 	"net"
 	"net/http"
 )
@@ -26,6 +27,14 @@ type (
 		committed bool
 	}
 )
+
+// Response returns ResponseWriter from context.
+func Response(c context.Context) (w ResponseWriter) {
+	if c := fromCtx(c); c != nil {
+		w = c.w
+	}
+	return
+}
 
 func (r *response) Header() http.Header {
 	return r.ResponseWriter.Header()

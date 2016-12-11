@@ -113,11 +113,3 @@ func Request(c context.Context) (r *http.Request) {
 	}
 	return
 }
-
-// Response returns http.ResponseWriter from context.
-func Response(c context.Context) (w ResponseWriter) {
-	if c := fromCtx(c); c != nil {
-		w = c.w
-	}
-	return
-}
