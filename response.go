@@ -18,6 +18,7 @@ type (
 		Status() int
 		Size() int64
 		Committed() bool
+		Reset(http.ResponseWriter)
 	}
 
 	response struct {
@@ -80,4 +81,11 @@ func (r *response) Size() int64 {
 
 func (r *response) Committed() bool {
 	return r.committed
+}
+
+func (r *response) Reset(w http.ResponseWriter) {
+	r.ResponseWriter = w
+	r.size = 0
+	r.code = 0
+	r.committed = false
 }

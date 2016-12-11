@@ -38,6 +38,12 @@ func (c *horoCtx) Value(key interface{}) interface{} {
 	return c.Context.Value(key)
 }
 
+func (c *horoCtx) Reset(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	c.w.(*response).Reset(rw)
+	c.r = r
+	c.ps = ps
+}
+
 // Param returns url param.
 func Param(c context.Context, name string) string {
 	if c := fromCtx(c); c != nil {

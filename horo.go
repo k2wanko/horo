@@ -54,6 +54,7 @@ package horo
 import (
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/k2wanko/horo/log"
@@ -68,6 +69,7 @@ type (
 
 		router     *httprouter.Router
 		middleware []MiddlewareFunc
+		pool       sync.Pool
 	}
 
 	// HandlerFunc is server HTTP requests.
@@ -101,6 +103,14 @@ func New() (h *Horo) {
 		Logger:       log.DefaultLogger,
 		router:       httprouter.New(),
 	}
+
+	h.pool.New = func() interface{} {
+		return &horoCtx{
+			Context: context.Background(),
+			w:       &response{},
+		}
+	}
+
 	return
 }
 
@@ -144,22 +154,25 @@ func (h *Horo) HEAD(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
 	h.router.HEAD(path, h.handle(hf, mw...))
 }
 
-func (h *Horo) handle(hf HandlerFunc, mw ...MiddlewareFunc) httprouter.Handle {
-	return func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		w := &response{ResponseWriter: rw}
-		var c context.Context = &horoCtx{
-			Context: context.Background(),
-			w:       w,
-			r:       r,
-			ps:      ps,
-		}
+func (h *Horo) handle(hf HandlerFunc, mwf ...MiddlewareFunc) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		hc := h.pool.Get().(*horoCtx)
+		hc.Reset(w, r, ps)
 
-		c, cancel := context.WithCancel(c)
-
+		c, cancel := context.WithCancel(hc)
 		c = log.WithContext(c, h.Logger)
 
+		hwl := len(h.middleware)
+		mw := make([]MiddlewareFunc, hwl+len(mwf))
+		for i := 0; i < cap(mw); i++ {
+			if i < hwl {
+				mw[i] = h.middleware[i]
+			} else {
+				mw[i] = mwf[i-hwl]
+			}
+		}
+
 		hf := func(c context.Context) error {
-			mw := append(h.middleware, mw...)
 			for i := len(mw) - 1; i >= 0; i-- {
 				hf = mw[i](hf)
 			}
@@ -172,6 +185,8 @@ func (h *Horo) handle(hf HandlerFunc, mw ...MiddlewareFunc) httprouter.Handle {
 		}
 
 		cancel()
+
+		h.pool.Put(hc)
 	}
 }
 
