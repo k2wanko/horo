@@ -1,3 +1,6 @@
+/*
+Package log is horo logger.
+*/
 package log
 
 import (
