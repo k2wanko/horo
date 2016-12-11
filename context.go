@@ -12,7 +12,7 @@ type (
 	horoCtx struct {
 		context.Context
 
-		w  http.ResponseWriter
+		w  ResponseWriter
 		r  *http.Request
 		ps httprouter.Params
 	}
@@ -115,7 +115,7 @@ func Request(c context.Context) (r *http.Request) {
 }
 
 // Response returns http.ResponseWriter from context.
-func Response(c context.Context) (w http.ResponseWriter) {
+func Response(c context.Context) (w ResponseWriter) {
 	if c := fromCtx(c); c != nil {
 		w = c.w
 	}

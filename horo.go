@@ -142,13 +142,16 @@ func (h *Horo) HEAD(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
 }
 
 func (hf HandlerFunc) hrHandle(h *Horo, mw ...MiddlewareFunc) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		c := &horoCtx{
+	return func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		w := &response{ResponseWriter: rw}
+		var c context.Context = &horoCtx{
 			Context: context.Background(),
 			w:       w,
 			r:       r,
 			ps:      ps,
 		}
+
+		c, cancel := context.WithCancel(c)
 
 		hf := func(c context.Context) error {
 			mw := append(h.middleware, mw...)
@@ -162,6 +165,8 @@ func (hf HandlerFunc) hrHandle(h *Horo, mw ...MiddlewareFunc) httprouter.Handle 
 		if err := hf(c); err != nil {
 			h.ErrorHandler(c, err)
 		}
+
+		cancel()
 	}
 }
 
