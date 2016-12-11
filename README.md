@@ -33,6 +33,8 @@ func main() {
 }
 ```
 
+more [examples](https://github.com/k2wanko/horo-example)
+
 # License
 
 [MIT](https://github.com/k2wanko/horo/blob/master/LICENSE)
