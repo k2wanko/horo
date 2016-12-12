@@ -35,7 +35,7 @@ Google App Engine Example:
         "golang.org/x/net/context"
 
         "github.com/k2wanko/horo"
-		"github.com/k2wanko/horo/middleware"
+        "github.com/k2wanko/horo/middleware"
     )
 
     func Index(c context.Context) error {
@@ -44,7 +44,7 @@ Google App Engine Example:
 
     func init() {
         h := horo.New()
-		h.Use(middleware.Recover(), middleware.AppContext())
+        h.Use(middleware.Recover(), middleware.AppContext())
 
         h.GET("/", Index)
 
