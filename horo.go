@@ -39,12 +39,12 @@ Google App Engine Example:
     )
 
     func Index(c context.Context) error {
-        return horo.Text(c, http.StatusOK, "Hello World!")
+        return horo.Text(c, 200, fmt.Sprintf("Hello, %s", appengine.AppID(c)))
     }
 
     func init() {
         h := horo.New()
-		h.Use(middleware.Recover())
+		h.Use(middleware.Recover(), middleware.AppContext())
 
         h.GET("/", Index)
 
