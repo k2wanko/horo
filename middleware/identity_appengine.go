@@ -13,8 +13,7 @@ import (
 func AppContext() horo.MiddlewareFunc {
 	return func(next horo.HandlerFunc) horo.HandlerFunc {
 		return func(c context.Context) error {
-			c = appengine.WithContext(c, horo.Request(c))
-			return next(c)
+			return next(appengine.WithContext(c, horo.Request(c)))
 		}
 	}
 }
