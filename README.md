@@ -18,6 +18,7 @@ import (
     "golang.org/x/net/context"
 
     "github.com/k2wanko/horo"
+    "github.com/k2wanko/horo/middleware"
 )
 
 func Index(c context.Context) error {
@@ -26,6 +27,7 @@ func Index(c context.Context) error {
 
 func main() {
     h := horo.New()
+    h.Use(middleware.Logger(), middleware.Recover())
 
     h.GET("/", Index)
 

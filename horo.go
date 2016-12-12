@@ -19,7 +19,7 @@ Basic Example:
 
     func main() {
         h := horo.New()
-        h.Use(middleware.Logger())
+        h.Use(middleware.Logger(), middleware.Recover())
 
         h.GET("/", Index)
 
@@ -35,6 +35,7 @@ Google App Engine Example:
         "golang.org/x/net/context"
 
         "github.com/k2wanko/horo"
+		"github.com/k2wanko/horo/middleware"
     )
 
     func Index(c context.Context) error {
@@ -43,6 +44,7 @@ Google App Engine Example:
 
     func init() {
         h := horo.New()
+		h.Use(middleware.Recover())
 
         h.GET("/", Index)
 
