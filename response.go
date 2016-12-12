@@ -2,9 +2,10 @@ package horo
 
 import (
 	"bufio"
-	"context"
 	"net"
 	"net/http"
+
+	"golang.org/x/net/context"
 )
 
 type (
