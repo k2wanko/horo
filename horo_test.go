@@ -42,7 +42,7 @@ func TestNotFound(t *testing.T) {
 		t.Errorf("w.Code = %v; want %v", code, want)
 	}
 
-	if body, want := w.Body.String(), "404 page not found\n"; body != want {
+	if body, want := w.Body.String(), "Not Found"; body != want {
 		t.Errorf("w.Body = %v; want %v", body, want)
 	}
 }
@@ -122,6 +122,62 @@ func TestMiddleware(t *testing.T) {
 
 	if diff := pretty.Compare(res, []int{0, 1, 2, 3, 4}); diff != "" {
 		t.Errorf("diff:\n%s", diff)
+	}
+}
+
+func TestMiddlewareNoHandler(t *testing.T) {
+	var res []int
+	h := New()
+	h.Use(func(next HandlerFunc) HandlerFunc {
+		return func(c context.Context) (err error) {
+			t.Log("Top level middleware: before")
+			res = append(res, 0)
+			err = next(c)
+			t.Log("Top level middleware: after")
+			res = append(res, 1)
+			return
+		}
+	})
+
+	h.GET("/", func(c context.Context) error {
+		res = append(res, -1)
+		return Text(c, 200, "Test")
+	})
+
+	r, _ := http.NewRequest("GET", "/404", nil)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, r)
+
+	if diff := pretty.Compare(res, []int{0, 1}); diff != "" {
+		t.Errorf("diff:\n%s", diff)
+	}
+
+	if code, want := w.Code, 404; code != want {
+		t.Errorf("code = %v; want = %v", code, want)
+	}
+
+	if out, want := w.Body.String(), "Not Found"; out != want {
+		t.Errorf("out = %s; want = %s", out, want)
+	}
+
+	// reset
+	res = nil
+	r, _ = http.NewRequest("POST", "/", nil)
+	w = httptest.NewRecorder()
+
+	h.ServeHTTP(w, r)
+
+	if diff := pretty.Compare(res, []int{0, 1}); diff != "" {
+		t.Errorf("diff:\n%s", diff)
+	}
+
+	if code, want := w.Code, 405; code != want {
+		t.Errorf("code = %v; want = %v", code, want)
+	}
+
+	if out, want := w.Body.String(), "Method Not Allowed"; out != want {
+		t.Errorf("out = %s; want = %s", out, want)
 	}
 }
 

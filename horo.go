@@ -64,8 +64,9 @@ import (
 type (
 	// Horo freamwork instance.
 	Horo struct {
-		ErrorHandler ErrorHandlerFunc
-		Logger       log.Logger
+		ErrorHandler               ErrorHandlerFunc
+		NotFound, MethodNotAllowed HandlerFunc
+		Logger                     log.Logger
 
 		router     *httprouter.Router
 		middleware []MiddlewareFunc
@@ -99,9 +100,11 @@ var (
 // New is create Horo instance.
 func New() (h *Horo) {
 	h = &Horo{
-		ErrorHandler: DefaultErrorHandler,
-		Logger:       log.DefaultLogger,
-		router:       httprouter.New(),
+		ErrorHandler:     DefaultErrorHandler,
+		NotFound:         NotFound,
+		MethodNotAllowed: MethodNotAllowed,
+		Logger:           log.DefaultLogger,
+		router:           httprouter.New(),
 	}
 
 	h.pool.New = func() interface{} {
@@ -110,6 +113,9 @@ func New() (h *Horo) {
 			w:       &response{},
 		}
 	}
+
+	h.router.NotFound = http.HandlerFunc(h.handleNotFound)
+	h.router.MethodNotAllowed = http.HandlerFunc(h.handleMethodNotAllowed)
 
 	return
 }
@@ -156,38 +162,50 @@ func (h *Horo) HEAD(path string, hf HandlerFunc, mw ...MiddlewareFunc) {
 
 func (h *Horo) handle(hf HandlerFunc, mwf ...MiddlewareFunc) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		hc := h.pool.Get().(*horoCtx)
-		hc.Reset(w, r, ps)
-
-		c, cancel := context.WithCancel(hc)
-		c = log.WithContext(c, h.Logger)
-
-		hwl := len(h.middleware)
-		mw := make([]MiddlewareFunc, hwl+len(mwf))
-		for i := 0; i < cap(mw); i++ {
-			if i < hwl {
-				mw[i] = h.middleware[i]
-			} else {
-				mw[i] = mwf[i-hwl]
-			}
-		}
-
-		hf := func(c context.Context) error {
-			for i := len(mw) - 1; i >= 0; i-- {
-				hf = mw[i](hf)
-			}
-
-			return hf(c)
-		}
-
-		if err := hf(c); err != nil {
-			h.ErrorHandler(c, err)
-		}
-
-		cancel()
-
-		h.pool.Put(hc)
+		h.serve(w, r, ps, hf, mwf...)
 	}
+}
+
+func (h *Horo) handleNotFound(w http.ResponseWriter, r *http.Request) {
+	h.serve(w, r, nil, h.NotFound)
+}
+
+func (h *Horo) handleMethodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	h.serve(w, r, nil, h.MethodNotAllowed)
+}
+
+func (h *Horo) serve(w http.ResponseWriter, r *http.Request, ps httprouter.Params, hf HandlerFunc, mwf ...MiddlewareFunc) {
+	hc := h.pool.Get().(*horoCtx)
+	hc.Reset(w, r, ps)
+
+	c, cancel := context.WithCancel(hc)
+	c = log.WithContext(c, h.Logger)
+
+	hwl := len(h.middleware)
+	mw := make([]MiddlewareFunc, hwl+len(mwf))
+	for i := 0; i < cap(mw); i++ {
+		if i < hwl {
+			mw[i] = h.middleware[i]
+		} else {
+			mw[i] = mwf[i-hwl]
+		}
+	}
+
+	f := func(c context.Context) error {
+		for i := len(mw) - 1; i >= 0; i-- {
+			hf = mw[i](hf)
+		}
+
+		return hf(c)
+	}
+
+	if err := f(c); err != nil {
+		h.ErrorHandler(c, err)
+	}
+
+	cancel()
+
+	h.pool.Put(hc)
 }
 
 // DefaultErrorHandler invoke HTTP Error Handler
@@ -199,6 +217,22 @@ func DefaultErrorHandler(c context.Context, err error) {
 		msg = he.Message
 	}
 	Text(c, code, msg)
+}
+
+// NotFound is default not found handler.
+func NotFound(c context.Context) error {
+	return &HTTPError{
+		Code:    http.StatusNotFound,
+		Message: http.StatusText(http.StatusNotFound),
+	}
+}
+
+// MethodNotAllowed is default MethodNotAllowed handler.
+func MethodNotAllowed(c context.Context) error {
+	return &HTTPError{
+		Code:    http.StatusMethodNotAllowed,
+		Message: http.StatusText(http.StatusMethodNotAllowed),
+	}
 }
 
 // ServeHTTP implements http.Handler interface.

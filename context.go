@@ -45,11 +45,13 @@ func (c *horoCtx) Reset(rw http.ResponseWriter, r *http.Request, ps httprouter.P
 }
 
 // Param returns url param.
-func Param(c context.Context, name string) string {
+func Param(c context.Context, name string) (v string) {
 	if c := fromCtx(c); c != nil {
-		return c.ps.ByName(name)
+		if c.ps != nil {
+			v = c.ps.ByName(name)
+		}
 	}
-	return ""
+	return
 }
 
 // NoContent send no body.
