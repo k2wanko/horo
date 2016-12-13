@@ -47,3 +47,19 @@ func TestJSON(t *testing.T) {
 		t.Errorf("w.Body = %v; want %v", body, want)
 	}
 }
+
+func TestRequestID(t *testing.T) {
+	h := New()
+	h.GET("/", func(c context.Context) error {
+		t.Logf("RequestID: %v", RequestID(c))
+		if RequestID(c) == "" {
+			t.Errorf("RequestID is empty")
+		}
+		return nil
+	})
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, r)
+}

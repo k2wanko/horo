@@ -69,6 +69,7 @@ type (
 		ErrorHandler               ErrorHandlerFunc
 		NotFound, MethodNotAllowed HandlerFunc
 		Logger                     log.Logger
+		RequestIDGenerator         RequestIDGenerator
 
 		router     *httprouter.Router
 		middleware []MiddlewareFunc
@@ -112,6 +113,7 @@ func New() (h *Horo) {
 	h.pool.New = func() interface{} {
 		return &horoCtx{
 			Context: context.Background(),
+			h:       h,
 			w:       &response{},
 		}
 	}

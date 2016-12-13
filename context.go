@@ -5,24 +5,37 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
 
 type (
+	// RequestIDGenerator is generate requestID method interface.
+	RequestIDGenerator interface {
+		RequestID(c context.Context) string
+	}
+
 	horoCtx struct {
 		context.Context
 
-		w  ResponseWriter
-		r  *http.Request
-		ps httprouter.Params
+		h     *Horo
+		w     ResponseWriter
+		r     *http.Request
+		ps    httprouter.Params
+		reqID string
 	}
 
 	ctxkey struct {
 		name string
 	}
+
+	reqGen struct{}
 )
 
 var (
+	// DefaultRequestIDGenerator is application request id generator.
+	DefaultRequestIDGenerator RequestIDGenerator = &reqGen{}
+
 	ctxKey = &ctxkey{"horo ctx"}
 )
 
@@ -42,6 +55,7 @@ func (c *horoCtx) Reset(rw http.ResponseWriter, r *http.Request, ps httprouter.P
 	c.w.Reset(rw)
 	c.r = r
 	c.ps = ps
+	c.reqID = ""
 }
 
 // Param returns url param.
@@ -52,6 +66,29 @@ func Param(c context.Context, name string) (v string) {
 		}
 	}
 	return
+}
+
+// RequestID returns request id from context.
+func RequestID(ctx context.Context) (id string) {
+	if c := fromCtx(ctx); c != nil {
+		id = c.reqID
+		if id != "" {
+			return
+		}
+
+		id = requestID(c.r)
+		if g := c.h.RequestIDGenerator; id == "" && g != nil {
+			id = g.RequestID(ctx)
+		} else {
+			id = DefaultRequestIDGenerator.RequestID(ctx)
+		}
+		c.reqID = id
+	}
+	return
+}
+
+func (*reqGen) RequestID(c context.Context) string {
+	return uuid.NewV4().String()
 }
 
 // NoContent send no body.
