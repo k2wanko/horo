@@ -114,7 +114,7 @@ func New() (h *Horo) {
 		return &horoCtx{
 			Context: context.Background(),
 			h:       h,
-			w:       &response{},
+			w:       &ResponseWriter{},
 		}
 	}
 

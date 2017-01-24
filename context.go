@@ -19,7 +19,7 @@ type (
 		context.Context
 
 		h     *Horo
-		w     ResponseWriter
+		w     *ResponseWriter
 		r     *http.Request
 		ps    httprouter.Params
 		reqID string
