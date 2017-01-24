@@ -26,10 +26,12 @@ func Response(c context.Context) (w *ResponseWriter) {
 	return
 }
 
+// Header implements http.ResponseWriter
 func (r *ResponseWriter) Header() http.Header {
 	return r.rw.Header()
 }
 
+// Write implements http.ResponseWriter
 func (r *ResponseWriter) Write(b []byte) (n int, err error) {
 	if !r.committed {
 		r.WriteHeader(http.StatusOK)
@@ -39,6 +41,7 @@ func (r *ResponseWriter) Write(b []byte) (n int, err error) {
 	return
 }
 
+// WriteHeader implements http.ResponseWriter
 func (r *ResponseWriter) WriteHeader(code int) {
 	if r.committed {
 		return
@@ -48,30 +51,37 @@ func (r *ResponseWriter) WriteHeader(code int) {
 	r.committed = true
 }
 
+// Hijack implements http.Hijacker
 func (r *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return r.rw.(http.Hijacker).Hijack()
 }
 
+// Flush implements http.Flusher
 func (r *ResponseWriter) Flush() {
 	r.rw.(http.Flusher).Flush()
 }
 
+// CloseNotify implements http.CloseNotifier
 func (r *ResponseWriter) CloseNotify() <-chan bool {
 	return r.rw.(http.CloseNotifier).CloseNotify()
 }
 
+// Status returns http status.
 func (r *ResponseWriter) Status() int {
 	return r.code
 }
 
+// Size returns response size.
 func (r *ResponseWriter) Size() int64 {
 	return r.size
 }
 
+// Committed is responsed flag.
 func (r *ResponseWriter) Committed() bool {
 	return r.committed
 }
 
+// Reset cleanup struct
 func (r *ResponseWriter) Reset(w http.ResponseWriter) {
 	r.rw = w
 	r.size = 0
